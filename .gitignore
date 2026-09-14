@@ -1,0 +1,6 @@
+raw/
+.ipynb_checkpoints/
+*.xlsx
+.DS_Store
+*.csv
+ignore/
