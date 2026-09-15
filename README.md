@@ -61,7 +61,7 @@ In EF2024A: 113,648 rows flagged `R` (reported), 167 flagged `P` (imputed),
 
 **Verified:** UNITID 152044 was imputed in both 2023 and 2024, with values of
 85 and 80 respectively. Imputed figures change year to year rather than being
-carried forward unchanged, so they are visually identical to real enrolment
+carried forward unchanged, so they are visually identical to real enrollment
 movement in any trend chart.
 
 **Impact:** the flag columns are the only signal distinguishing real data from
@@ -82,22 +82,38 @@ requiring an explicit snapshot strategy.
 Ranking institutions by year-over-year percent change returns data events,
 not enrollment trends.
 
-**Verified:** Illinois Eastern Community Colleges (UNITID 145707) shows
-869 → 880 → 3,726 students across 2022 to 2024. A 1.3% change followed by a
-323% change is characteristic of a reporting or consolidation change rather
-than growth.
+**Verified:** Illinois Eastern Community Colleges (UNITID 145707) reported
+869 students in 2022, 880 in 2023, and 3,726 in 2024. A 1.3% change followed
+by a 323% change is characteristic of a reporting or consolidation change
+rather than growth.
 
 **Impact:** any ranked change analysis needs a multi-year consistency check
 and an absolute-magnitude floor, not just a size threshold.
 
 ## Analysis completed
 
-- National enrollment totals with correct hierarchy handling
-- Institution concentration: no single institution exceeds 1.1% of US
-  enrollment, indicating a highly fragmented market
-- Year-over-year change by institution using window functions, with
-  reported-only filtering and a minimum-size threshold
-- Top and bottom movers, with artifact identification
+**National totals with correct hierarchy handling.** 20,357,226 students
+across 2024, filtered to `EFALEVEL = 1`.
+
+**Institution concentration.** No single institution exceeds 1.1% of US
+enrollment, indicating a highly fragmented market.
+
+**Year-over-year change by institution.** Built as a layered query:
+
+- Multi-file read across three years using DuckDB's glob syntax, with the
+  survey year extracted from the source filename
+- Aggregation filtered to reported values only (`XEFTOTLT = 'R'`) and to the
+  top-level enrollment code
+- `LAG()` partitioned by institution and ordered by year to bring the prior
+  year alongside each row
+- A CTE wrapping the window layer so the calculated change columns can be
+  filtered in an outer query
+- `UNION ALL` between two branches to return the ten fastest growers and the
+  ten steepest declines in one result, with a direction label
+- A minimum prior-year enrollment threshold to exclude small-institution noise
+
+**Artifact identification.** The top movers were checked against a third year
+of data, confirming they were reporting changes rather than trends.
 
 ## Modelling decisions
 
@@ -114,6 +130,7 @@ Open, to be resolved in the modelling phase:
 
 - **DuckDB** for querying raw CSVs directly, no warehouse required
 - **Python / Jupyter** for orchestration and exploration
+- **Git** for version control
 - **Planned:** BigQuery, dbt, Tableau
 
 ## Running it
@@ -124,7 +141,7 @@ pip install duckdb pandas
 
 Place the IPEDS CSVs in `raw/`, then open `IPEDS_PROJECT.ipynb`.
 
-Queries reference files directly:
+Queries reference files directly, no load step required:
 
 ```python
 duckdb.sql("SELECT COUNT(*) FROM 'raw/ef2024a.csv'").df()
@@ -134,9 +151,10 @@ duckdb.sql("SELECT COUNT(*) FROM 'raw/ef2024a.csv'").df()
 
 - [x] Source and profile raw data
 - [x] Identify and quantify data quality issues
-- [x] Exploratory analysis with SQL window functions
+- [x] Exploratory analysis with SQL window functions and CTEs
+- [x] Version control and public repository
 - [ ] Python ingestion layer
 - [ ] Load to BigQuery
 - [ ] dbt models with tests and documentation
-- [ ] Dimensional model
+- [ ] Dimensional model with an explicit SCD strategy
 - [ ] Tableau dashboard
