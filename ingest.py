@@ -35,6 +35,7 @@ hd_frames = []
 
 for path in sorted(Path('raw').glob('hd*.csv')):
     df = pd.read_csv(path, encoding='latin-1')
+    df.columns = df.columns.str.replace('ï»¿', '', regex=False).str.strip()
     df['year'] = int(path.name[2:6])
     hd_frames.append(df)
 
@@ -43,13 +44,17 @@ institutions = pd.concat(hd_frames, ignore_index=True)
 print(institutions.shape)
 
 institutions = institutions[['UNITID', 'year', 'INSTNM', 'STABBR']]
+institutions = institutions.dropna(subset=['UNITID'])
+institutions['UNITID'] = institutions['UNITID'].astype('int64')
 
 institutions = institutions.rename(columns={
     'UNITID': 'unitid',
-    'INSTNM': 'instnm',
+    'INSTNM': 'institution_name',
     'STABBR': 'state'
 })
 
 institutions.to_parquet('processed/institutions.parquet', index=False)
 
 print(f"Wrote {len(institutions)} rows to processed/institutions.parquet")
+
+
