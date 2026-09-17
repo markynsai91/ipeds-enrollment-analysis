@@ -1,0 +1,9 @@
+
+target/
+dbt_packages/
+logs/
+.env
+target/
+dbt_packages/
+logs/
+.ipynb_checkpoints/
