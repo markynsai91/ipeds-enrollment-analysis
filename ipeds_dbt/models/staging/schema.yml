@@ -1,0 +1,29 @@
+version: 2
+
+models:
+  - name: stg_enrollment
+    description: "One row per institution per year, total undergraduate enrollment"
+    columns:
+      - name: unitid
+        description: "IPEDS institution identifier"
+        data_tests:
+          - not_null
+      - name: year
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [2022, 2023,2024]
+      - name: total_enrollment
+        data_tests:
+          - not_null
+
+  - name: stg_institutions
+    description: "One row per institution per year, name and state"
+    columns:
+      - name: unitid
+        data_tests:
+          - not_null
+      - name: year
+        data_tests:
+          - not_null
