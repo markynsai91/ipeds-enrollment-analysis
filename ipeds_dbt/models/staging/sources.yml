@@ -1,0 +1,17 @@
+version: 2
+
+sources:
+  - name: ipeds
+    tables:
+      - name: enrollment
+        identifier: Enrollment
+        columns:
+          - name: unitid
+            data_tests:
+              - not_null
+      - name: institutions
+        identifier: Institutions
+        columns:
+          - name: unitid
+            data_tests:
+              - not_null
