@@ -2,6 +2,9 @@ version: 2
 
 sources:
   - name: ipeds
+    config:
+      meta:
+        external_location: "../processed/{name}.parquet"
     tables:
       - name: enrollment
         identifier: Enrollment
