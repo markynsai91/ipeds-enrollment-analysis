@@ -1,0 +1,41 @@
+version: 2
+
+models:
+  - name: dim_institutions
+    description: "One row per institution per year. Simplified Type 2 dimension."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - unitid
+              - year
+    columns:
+      - name: institution_key
+        description: "Surrogate key built from unitid and year"
+        data_tests:
+          - unique
+          - not_null
+      - name: unitid
+        data_tests:
+          - not_null
+      - name: year
+        data_tests:
+          - not_null
+
+  - name: fct_enrollment
+    description: "One row per institution per year. Total enrollment, all students."
+    columns:
+      - name: institution_key
+        description: "Foreign key to dim_institutions"
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_institutions')
+                field: institution_key
+      - name: year
+        data_tests:
+          - not_null
+      - name: total_enrollment
+        data_tests:
+          - not_null
